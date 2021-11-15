@@ -24,6 +24,33 @@ OpenSSL 3.1
 
 ### Changes between 3.0 and 3.1 [xx XXX xxxx]
 
+ * s_client and s_server apps now explicitly say when the TLS version
+   does not include the renegotiation mechanism. This avoids confusion
+   between that scenario versus when the TLS version includes secure
+   renegotiation but the peer lacks support for it.
+
+   *Felipe Gasper*
+
+ * The default SSL/TLS security level has been changed from 1 to 2. RSA,
+   DSA and DH keys of 1024 bits and above and less than 2048 bits and ECC keys
+   of 160 bits and above and less than 224 bits were previously accepted by
+   default but are now no longer allowed. By default TLS compression was
+   already disabled in previous OpenSSL versions. At security level 2 it cannot
+   be enabled.
+
+   *Matt Caswell*
+
+ * The SSL_CTX_set_cipher_list family functions now accept ciphers using their
+   IANA standard names.
+
+   *Erik Lax*
+
+ * The PVK key derivation function has been moved from b2i_PVK_bio_ex() into
+   the legacy crypto provider as an EVP_KDF. Applications requiring this KDF
+   will need to load the legacy crypto provider.
+
+   *Paul Dale*
+
  * The various OBJ_* functions have been made thread safe.
 
    *Paul Dale*

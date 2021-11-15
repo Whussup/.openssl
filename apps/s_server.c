@@ -131,12 +131,12 @@ static unsigned int psk_server_cb(SSL *ssl, const char *identity,
     if (s_debug)
         BIO_printf(bio_s_out, "psk_server_cb\n");
 
-    if (SSL_version(ssl) >= TLS1_3_VERSION) {
+    if (!SSL_is_dtls(ssl) && SSL_version(ssl) >= TLS1_3_VERSION) {
         /*
-         * This callback is designed for use in TLSv1.2. It is possible to use
-         * a single callback for all protocol versions - but it is preferred to
-         * use a dedicated callback for TLSv1.3. For TLSv1.3 we have
-         * psk_find_session_cb.
+         * This callback is designed for use in (D)TLSv1.2 (or below). It is
+         * possible to use a single callback for all protocol versions - but it
+         * is preferred to use a dedicated callback for TLSv1.3. For TLSv1.3 we
+         * have psk_find_session_cb.
          */
         return 0;
     }
@@ -2948,8 +2948,9 @@ static void print_connection_info(SSL *con)
 #endif
     if (SSL_session_reused(con))
         BIO_printf(bio_s_out, "Reused session-id\n");
-    BIO_printf(bio_s_out, "Secure Renegotiation IS%s supported\n",
-               SSL_get_secure_renegotiation_support(con) ? "" : " NOT");
+
+    ssl_print_secure_renegotiation_notes(bio_s_out, con);
+
     if ((SSL_get_options(con) & SSL_OP_NO_RENEGOTIATION))
         BIO_printf(bio_s_out, "Renegotiation is DISABLED\n");
 
@@ -3160,10 +3161,7 @@ static int www_body(int s, int stype, int prot, unsigned char *context)
             }
             BIO_puts(io, "\n");
 
-            BIO_printf(io,
-                       "Secure Renegotiation IS%s supported\n",
-                       SSL_get_secure_renegotiation_support(con) ?
-                       "" : " NOT");
+            ssl_print_secure_renegotiation_notes(io, con);
 
             /*
              * The following is evil and should not really be done
